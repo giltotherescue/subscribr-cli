@@ -1,0 +1,34 @@
+{
+  "name": "@subscribr/cli",
+  "version": "1.0.0",
+  "description": "CLI and AI agent skill for the Subscribr YouTube API",
+  "bin": {
+    "subscribr-cli": "bin/install.js"
+  },
+  "keywords": [
+    "subscribr",
+    "youtube",
+    "api",
+    "cli",
+    "claude-code",
+    "ai-agent",
+    "skill",
+    "mcp",
+    "scriptwriting",
+    "youtube-api"
+  ],
+  "author": "Subscribr LLC <hello@subscribr.ai>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/giltotherescue/subscribr-cli.git"
+  },
+  "homepage": "https://subscribr.ai/youtube-api",
+  "files": [
+    "bin/",
+    "skills/",
+    "subscribr.py",
+    "LICENSE",
+    "README.md"
+  ]
+}
