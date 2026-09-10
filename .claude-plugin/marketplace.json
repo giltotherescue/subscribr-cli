@@ -11,7 +11,7 @@
       "name": "subscribr-cli",
       "source": "./",
       "description": "The Subscribr CLI and its API skill, for agents that automate YouTube content work over the REST API.",
-      "version": "2.3.0",
+      "version": "2.3.1",
       "license": "MIT",
       "homepage": "https://subscribr.ai/youtube-api",
       "repository": "https://github.com/SubscribrAI/cli",

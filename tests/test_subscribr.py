@@ -177,6 +177,72 @@ class CliContractTest(unittest.TestCase):
         self.assertEqual({"title": "Updated"}, body)
         self.assertEqual({"Idempotency-Key": "once-1", "If-Match": '"project-r1"'}, headers)
 
+    def test_parse_extra_args_leaves_header_bound_values_untouched(self):
+        """A strong ETag is quoted by definition (`"abc123"`). try_json_parse
+        auto-decodes a value starting with a double-quote as JSON, which
+        strips those required quotes before the value ever reaches
+        build_request. --if-match and --idempotency-key are always
+        transported as opaque header strings, never as body fields, so they
+        must skip JSON auto-decoding entirely."""
+        parsed = subscribr.parse_extra_args(["--if-match", '"abc123"'])
+        self.assertEqual('"abc123"', parsed["if_match"])
+
+        parsed = subscribr.parse_extra_args(["--idempotency-key", '"abc123"'])
+        self.assertEqual('"abc123"', parsed["idempotency_key"])
+
+        # A bare numeric or true/false/null-looking idempotency key must also
+        # survive as a string — it is an opaque token, not a JSON literal.
+        parsed = subscribr.parse_extra_args(["--idempotency-key", "12345"])
+        self.assertEqual("12345", parsed["idempotency_key"])
+        parsed = subscribr.parse_extra_args(["--idempotency-key", "true"])
+        self.assertEqual("true", parsed["idempotency_key"])
+
+    def test_parse_extra_args_still_json_decodes_ordinary_body_fields(self):
+        """Narrowing JSON auto-decoding to skip header-bound arguments must
+        not disturb it for everything else: a body field genuinely carrying
+        a JSON object, array, number, or boolean still decodes today."""
+        parsed = subscribr.parse_extra_args(["--metadata", '{"a": 1}'])
+        self.assertEqual({"a": 1}, parsed["metadata"])
+
+        parsed = subscribr.parse_extra_args(["--tags", '["x", "y"]'])
+        self.assertEqual(["x", "y"], parsed["tags"])
+
+        parsed = subscribr.parse_extra_args(["--count", "3", "--active", "true", "--title", "Plain text"])
+        self.assertEqual(3, parsed["count"])
+        self.assertIs(True, parsed["active"])
+        self.assertEqual("Plain text", parsed["title"])
+
+    def test_if_match_reaches_the_wire_with_its_quotes_intact(self):
+        """End-to-end regression for the reported bug: a correct strong ETag
+        passed on the command line must be sent byte-for-byte, or the server
+        rejects it as an unquoted/malformed If-Match and the user sees a
+        confusing validation error instead of a working request."""
+        captured = []
+
+        def urlopen(req, timeout=None, context=None):
+            captured.append(req)
+            response = MagicMock()
+            response.status = 200
+            response.headers = {}
+            response.read.return_value = b'{"ok": true}'
+            response.__enter__.return_value = response
+            return response
+
+        with patch.dict(os.environ, {"SUBSCRIBR_API_TOKEN": "t"}, clear=True), \
+                patch("urllib.request.urlopen", urlopen), \
+                redirect_stdout(io.StringIO()):
+            subscribr.run([
+                "projects", "update-project",
+                "--project", "project:v1:idea:7",
+                "--title", "Updated",
+                "--idempotency-key", "once-1",
+                "--if-match", '"project-r1"',
+            ])
+
+        self.assertEqual(1, len(captured))
+        self.assertEqual('"project-r1"', captured[0].get_header("If-match"))
+        self.assertEqual("once-1", captured[0].get_header("Idempotency-key"))
+
     def test_camel_case_contract_parameters_use_kebab_case_cli_options(self):
         route = subscribr.ROUTES["video.get-media-asset"]
         method, path, body, headers = subscribr.build_request(

@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "subscribr-cli",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Generated CLI transport and agent skill for the Subscribr Customer API.",
   "author": {
     "name": "Subscribr LLC",

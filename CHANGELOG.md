@@ -6,6 +6,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [2.3.1] - 2026-09-10
+
+### Fixed
+
+- A correct `--if-match` value was silently altered before it reached the server, so a working request failed with a confusing validation error instead of succeeding. The CLI auto-decodes an argument that looks like JSON, and a strong ETag is quoted by definition (`"abc123"`) — that auto-decoding stripped the required quotes, and the server then rejected the header as malformed. `--if-match` and `--idempotency-key` now always transmit exactly as typed; a `--body` field or other request field still decodes JSON as before.
+
 ## [2.3.0] - 2026-09-01
 
 Syncs the CLI against Subscribr's contract as deployed to production on 2026-08-31: the Video slice is now fully live, and the customer API grew past video for the first time.
@@ -68,7 +74,8 @@ The first release under the `@subscribrai` scope.
 - Renamed the package from `@giltotherescue/subscribr-cli` to `@subscribrai/cli`. The command names `subscribr`, `subscribr-cli`, and `subscribr-install-skill` are unchanged.
 - Deprecated every version of `@giltotherescue/subscribr-cli` on npm, with a notice pointing at the new name.
 
-[Unreleased]: https://github.com/SubscribrAI/cli/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/SubscribrAI/cli/compare/v2.3.1...HEAD
+[2.3.1]: https://github.com/SubscribrAI/cli/compare/v2.3.0...v2.3.1
 [2.3.0]: https://github.com/SubscribrAI/cli/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/SubscribrAI/cli/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/SubscribrAI/cli/releases/tag/v2.1.1
