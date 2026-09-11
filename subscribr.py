@@ -19,7 +19,7 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any
 
-VERSION = "2.3.0"
+VERSION = "2.3.1"
 METADATA_PATH = Path(__file__).resolve().parent / "skills" / "subscribr-api" / "references" / "operations.json"
 BODY_METHODS = {"POST", "PUT", "PATCH"}
 EXIT_AUTH = 2
@@ -248,6 +248,13 @@ def try_json_parse(value: str) -> Any:
     return value
 
 
+# These two arguments are always transported as opaque header values
+# (see build_request), never as request-body fields. A strong ETag is
+# quoted by definition (`"abc123"`), so JSON-decoding it here would strip
+# the quotes the server requires and send a malformed If-Match value.
+HEADER_BOUND_ARGUMENTS = {"idempotency_key", "if_match"}
+
+
 def parse_extra_args(args: list[str]) -> dict[str, Any]:
     result: dict[str, Any] = {}
     index = 0
@@ -257,7 +264,8 @@ def parse_extra_args(args: list[str]) -> dict[str, Any]:
             raise CliError(f"Unexpected argument: {argument}", EXIT_USAGE)
         key = argument[2:].replace("-", "_")
         if index + 1 < len(args) and not args[index + 1].startswith("--"):
-            result[key] = try_json_parse(args[index + 1])
+            value = args[index + 1]
+            result[key] = value if key in HEADER_BOUND_ARGUMENTS else try_json_parse(value)
             index += 2
         else:
             result[key] = True

@@ -1,6 +1,6 @@
 {
   "name": "@subscribrai/cli",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Generated CLI transport and agent skill for the Subscribr Customer API",
   "bin": {
     "subscribr": "bin/subscribr.js",
